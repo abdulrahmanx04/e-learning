@@ -11,7 +11,6 @@ import { Roles } from 'src/common/decorators/admin-decorator';
 import { CurrentUser } from 'src/common/decorators/current-user';
 import type { UserData } from 'src/common/all-interfaces/all-interfaces';
 @Controller('courses')
-
 export class CoursesController {
   constructor(private readonly coursesService: CoursesService) {}
 

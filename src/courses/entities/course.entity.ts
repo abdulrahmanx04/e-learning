@@ -50,8 +50,8 @@ export class Courses {
     isPublished: boolean
 
 
-     @Column({default: false})
-     isFree: boolean
+    @Column({default: false})
+    isFree: boolean
 
     @Column('decimal',{precision: 10, scale: 2})
     price: number
@@ -61,7 +61,7 @@ export class Courses {
 
     @ManyToOne(() => Users, user => user.courses)
     @JoinColumn({name: 'userId'})
-    teacher: Users
+    instructor: Users
 
     @Column()
     userId: string

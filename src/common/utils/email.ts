@@ -32,13 +32,26 @@ const templates= {
                 <a href= "${url}">Reset your password</a>
             </div>
         `
-    })
+    }),
+    paymentSuccess: () => ({
+      subject: 'Payment Successful',
+      html: `<p>Your payment was completed successfully.</p>`,
+    }),
+    paymentRefunded: () => ({
+        subject: 'Payment Refunded',
+        html: `<p>Your payment has been refunded successfully.</p>`,
+    }),
+
+    paymentFailed: (reason?: string) => ({
+        subject: 'Payment Failed',
+        html: `<p>Your payment failed. ${reason ?? ''}</p>`,
+  }),
 }
 
 
-type emailType= 'verification' | 'resetPassword' 
+type emailType= 'verification' | 'resetPassword'  | 'paymentSuccess' | 'paymentFailed' | 'paymentRefunded'
 
-export async function sendEmail(type: emailType, to: string,url: any) {
+export async function sendEmail(type: emailType, to: string,url?: any) {
     const template= templates[type] (url)
     await transporter.sendMail({
         from: 'E-learning platform',

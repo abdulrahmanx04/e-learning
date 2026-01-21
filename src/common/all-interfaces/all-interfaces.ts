@@ -4,6 +4,7 @@ import { Courses } from "src/courses/entities/course.entity"
 export interface UserData {
     id: string,
     role: string
+    email: string
 }
 
 export interface AuthRequest {
@@ -28,3 +29,18 @@ export interface MaterialsUpload {
     size: number
 }
 
+
+export interface CheckoutData {
+    amount: number,
+    currency: string,
+    enrollId: string,
+    successUrl: string,
+    cancelUrl?: string,
+    customerEmail?: string
+}
+
+export interface RefundData {
+    paymentIntentId: string
+    amount?: number
+    reason?: string
+}

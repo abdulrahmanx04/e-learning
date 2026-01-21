@@ -3,6 +3,7 @@ import { Expose, Transform, Type } from "class-transformer";
 import { IsBoolean, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID, Length, Min } from "class-validator";
 import { CourseCategory, CourseLevels } from "../entities/course.entity";
 import { FileDto } from "src/lessons/dto/lesson.dto";
+import { InstructorDto } from "src/enrollment/dto/enrollment.dto";
 
 
 @Injectable()
@@ -103,6 +104,10 @@ export class CourseResponseDto {
     title: string
 
     @Expose()
+    @Type(() => InstructorDto)
+    instructor: InstructorDto
+
+    @Expose()
     description: string
 
     @Expose()
@@ -124,24 +129,9 @@ export class CourseResponseDto {
     isFree: boolean
 
     @Expose()
-    isPublished?: boolean
-
-    @Expose()
     thumbnailUrl: string
 
-    @Expose()
-    thumbnailPublicId: string
-
-    @Expose()
-    @Transform(({ obj }) => obj.teacher?.name)
-    teacherName: string;
-
-    @Expose()
-    @Transform(({ obj }) => obj.teacher?.avatar)
-    teacherAvatar: string;
-
 }
-
 
 export class RolesResponseCourseDto extends CourseResponseDto {
 

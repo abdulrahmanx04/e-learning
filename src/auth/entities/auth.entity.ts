@@ -2,6 +2,7 @@ import { BeforeInsert, Column, CreateDateColumn, Entity, OneToMany, PrimaryGener
 import bcrypt from 'bcrypt'
 import { Enrollments } from "src/enrollment/entities/enrollment.entity";
 import { Courses } from "src/courses/entities/course.entity";
+import { Payment } from "src/payments/entities/payment.entity";
 
 
 export enum Role {
@@ -62,8 +63,11 @@ export class Users {
     @OneToMany(() => Enrollments, enrollment => enrollment.user)
     enrollments: Enrollments[]
 
-    @OneToMany(() => Courses, course => course.teacher)
+    @OneToMany(() => Courses, course => course.instructor)
     courses: Courses[]
+
+    @OneToMany(() => Payment, payment => payment.user)
+    payments: Payment[]
 
 
 }

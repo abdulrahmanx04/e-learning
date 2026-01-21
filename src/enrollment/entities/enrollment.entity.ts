@@ -1,34 +1,66 @@
+import { Max, Min } from "class-validator";
 import { Users } from "src/auth/entities/auth.entity";
 import { Courses } from "src/courses/entities/course.entity";
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Payment } from "src/payments/entities/payment.entity";
+import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from "typeorm";
 
 
+export enum EnrollStatus {
+    PENDING = 'pending',
+    ACTIVE= 'active',
+    COMPLETED= 'completed',
+    DROPPED= 'dropped'
+}
 @Entity('enrollments')
+@Unique(['userId','courseId'])
+@Index(['userId','status'])
+@Index(['courseId','status'])
 export class Enrollments {
 
     @PrimaryGeneratedColumn('uuid')
     id: string
 
+    @ManyToOne(() => Users, user => user.enrollments)
+    @JoinColumn({name: 'userId'})
+    user: Users
 
-   @ManyToOne(() => Users, user => user.enrollments)
-   @JoinColumn({name: 'userId'})
-   user: Users
+    @Column()
+    userId: string
 
+    @ManyToOne(() => Courses, course => course.enrollments)
+    @JoinColumn({name: 'courseId'})
+    course: Courses
 
+    @Column()
+    courseId: string
 
-   @ManyToOne(() => Courses, course => course.enrollments)
-   @JoinColumn({name: 'courseId'})
-   course: Courses
+    @OneToMany(() => Payment, payment => payment.enrollment)
+    payments: Payment[]
 
+    @Column({type: 'enum', enum: EnrollStatus, default: EnrollStatus.PENDING})
+    status: EnrollStatus
 
+    @Column({type: 'int', default: 0})
+    @Min(0)
+    @Max(100    )
+    progressPercentage: number
 
-   @CreateDateColumn()
-   createdAt: Date
+    @Column({type: 'int', default: 0})
+    lessonsCompleted: number
 
-   @UpdateDateColumn()
-   updatedAt: Date
+    @Column({type: 'timestamp',nullable: true})
+    completedAt: Date 
 
+    @Column({ type: 'timestamp', nullable: true })
+    lastAccessedAt: Date
 
+    @Column({ default: false }) 
+    certificateEarned: boolean
 
+    @CreateDateColumn()
+    createdAt: Date
+
+    @UpdateDateColumn()
+    updatedAt: Date
 
 }

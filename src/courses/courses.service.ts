@@ -23,7 +23,7 @@ export class CoursesService {
     files?: {thumbnail?:  Express.Multer.File[], materials?: Express.Multer.File[]}
   ): Promise<RolesResponseCourseDto> {
     
-
+    const instructor= await this.userRepo.findOneOrFail({where: {id: user.id}})
     const [thumbnailArray,materials]= await Promise.all([
       uploadFiles(this.cloudinaryService,'thumbnails',files?.thumbnail),
       uploadFiles(this.cloudinaryService,'materials',files?.materials)
@@ -36,6 +36,7 @@ export class CoursesService {
       thumbnailUrl: thumbnail?.url,
       thumbnailPublicId: thumbnail?.publicId,
       materials,
+      instructor,
       userId: user.id
     }) 
 
@@ -49,28 +50,12 @@ export class CoursesService {
       searchableColumns: ['title','description','category','level'],
       filterableColumns: {
         price: [FilterOperator.GTE, FilterOperator.LTE, FilterOperator.BTW],
-        'teacher.name': [FilterOperator.ILIKE],
+        'instructor.name': [FilterOperator.ILIKE],
         category: [FilterOperator.IN],
         level: [FilterOperator.IN],
       },
       where: {isPublished: false},
-      relations: ['teacher'],
-      select: [
-        'id',
-        'title',
-        'description',
-        'price',
-        'category',
-        'level',
-        'rating',
-        'enrollmentCount',
-        'duration',
-        'thumbnailUrl',
-        'createdAt',
-        'updatedAt',
-        'teacher.name',
-        'teacher.avatar'
-      ],
+      relations: ['instructor'],
       defaultLimit: 10,
       maxLimit: 100,
       defaultSortBy: [['createdAt', 'DESC']]

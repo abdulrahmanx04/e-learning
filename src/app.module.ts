@@ -11,9 +11,14 @@ import { Enrollments } from './enrollment/entities/enrollment.entity';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { LessonsModule } from './lessons/lessons.module';
 import { Lessons } from './lessons/entities/lesson.entity';
+import { StripeModule } from './stripe/stripe.module';
+import { PaymentsModule } from './payments/payments.module';
+import { ConfigModule } from '@nestjs/config';
+import { Payment } from './payments/entities/payment.entity';
 dotenv.config()
 @Module({
   imports: [
+    ConfigModule.forRoot({isGlobal: true}),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST,
@@ -21,7 +26,7 @@ dotenv.config()
       username: process.env.DB_USER,
       password: process.env.DB_PASS,
       database: process.env.DB_DATABASE,
-      entities: [Users,Courses,Enrollments,Lessons],
+      entities: [Users,Courses,Enrollments,Lessons,Payment],
       synchronize: true
     }),
     UsersModule,
@@ -29,7 +34,9 @@ dotenv.config()
     CoursesModule,
     EnrollmentsModule,
     CloudinaryModule,
-    LessonsModule
+    LessonsModule,
+    PaymentsModule,
+    StripeModule
   ],
   controllers: [],
   providers: [],

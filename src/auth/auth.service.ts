@@ -17,8 +17,8 @@ export class AuthService {
         @InjectRepository(Users) private userRepo: Repository<Users>
     ) {}
 
-    private generateToken({id, role}: Record<string,string>): string {
-        return  this.jwtService.sign({id,role})
+    private generateToken({id, role,email}: Record<string,string>): string {
+        return  this.jwtService.sign({id,role,email})
     }
 
     private generateEmailVerification() {
@@ -70,7 +70,7 @@ export class AuthService {
         userExists.isActive= true
         userExists.verificationToken=null
         userExists.verificationTokenExpiry=null
-        const token= this.generateToken({id: userExists.id,role: userExists.role})
+        const token= this.generateToken({id: userExists.id,role: userExists.role,email: userExists.email})
 
         await this.userRepo.save(userExists)
 
@@ -102,18 +102,18 @@ export class AuthService {
     }
 
     async login(dto: loginDto): Promise<{token: string}> {
-        const exists= await this.userRepo.findOneOrFail({where: {email: dto.email}})
+        const userExists= await this.userRepo.findOneOrFail({where: {email: dto.email}})
 
         // if(!exists.isActive) {
         //     throw new BadRequestException('Email verification required')
         // }
-        const isValid= await bcrypt.compare(dto.password,exists.password)
+        const isValid= await bcrypt.compare(dto.password,userExists.password)
 
         if(!isValid) {
             throw new BadRequestException('Invalid credentials')
         }
 
-        const token= this.generateToken({id: exists.id,role: exists.role})
+        const token= this.generateToken({id: userExists.id,role: userExists.role,email:userExists.email})
         return {
             token
         }

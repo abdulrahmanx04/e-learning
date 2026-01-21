@@ -1,22 +1,60 @@
-import { Injectable } from '@nestjs/common';
-import { CreateEnrollmentDto } from './dto/create-enrollment.dto';
-import { UpdateEnrollmentDto } from './dto/update-enrollment.dto';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Enrollments, EnrollStatus } from './entities/enrollment.entity';
+import { Repository } from 'typeorm';
+import { Courses } from 'src/courses/entities/course.entity';
+import { UserData } from 'src/common/all-interfaces/all-interfaces';
+import { FilterOperator, paginate, Paginate, PaginateQuery } from 'nestjs-paginate';
+import { plainToInstance } from 'class-transformer';
+import { EnrollResponseDto } from './dto/enrollment.dto';
 
 @Injectable()
 export class EnrollmentService {
-  create(createEnrollmentDto: CreateEnrollmentDto) {
-    return 'This action adds a new enrollment';
+  constructor(@InjectRepository(Enrollments) private enrollRepo: Repository<Enrollments>,
+  @InjectRepository(Courses) private courseRepo: Repository<Courses>
+) {}
+  async create(courseId: string, user: UserData): Promise<EnrollResponseDto>  {
+    const course= await this.courseRepo.findOneOrFail({where: {id: courseId},relations:['instructor']})
+
+    const enroll= this.enrollRepo.create({
+      userId: user.id,
+      course,
+      status: EnrollStatus.PENDING,
+    })
+
+    await this.enrollRepo.save(enroll)
+
+    return plainToInstance(EnrollResponseDto,enroll,{excludeExtraneousValues: true})
+  }
+  
+  async findAll( query: PaginateQuery, user: UserData): Promise<{data: EnrollResponseDto[], meta: any}> {
+    const enrolls= await paginate(query,this.enrollRepo,{
+      sortableColumns: ['createdAt','updatedAt','status','progressPercentage'],
+      searchableColumns: ['course.title','status'],
+      filterableColumns: {
+        status: [FilterOperator.IN],
+        progressPercentage: [FilterOperator.GTE, FilterOperator.LTE, FilterOperator.BTW],
+      },
+      defaultLimit: 10,
+      maxLimit: 100,
+      defaultSortBy: [['createdAt','DESC']],
+      relations: ['course','course.instructor'],
+      where: {userId: user.id}
+    })
+    const dataDto= plainToInstance(EnrollResponseDto,enrolls.data,{excludeExtraneousValues: true})
+
+    return {
+      ...enrolls,
+      data: dataDto
+    } 
   }
 
-  findAll() {
-    return `This action returns all enrollment`;
+  async findOne(id: string,user: UserData): Promise<EnrollResponseDto>  {
+   const enroll= await this.enrollRepo.findOneOrFail({where: {id,userId: user.id},relations: ['course']})
+   return plainToInstance(EnrollResponseDto,enroll, {excludeExtraneousValues: true})
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} enrollment`;
-  }
-
-  update(id: number, updateEnrollmentDto: UpdateEnrollmentDto) {
+  update(id: number, updateEnrollmentDto) {
     return `This action updates a #${id} enrollment`;
   }
 

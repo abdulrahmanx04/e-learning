@@ -3,10 +3,13 @@ import { AppModule } from './app.module';
 import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
 import { HttpExceptionFilter } from './common/filters/http-exception-filter';
 import { TypeOrmExceptionFilter } from './common/filters/typeorm-exception.filter';
-
+import * as express from 'express';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
+  app.use(
+    '/payments/webhook',
+    express.raw({ type: 'application/json' })
+  );
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
     transform: true,
