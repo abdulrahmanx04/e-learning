@@ -46,7 +46,7 @@ export class PaymentsService {
       
         await manager.save(payment);
           
-        return { checkOutUrl: session.url };
+        return { id: payment.id,checkOutUrl: session.url };
       })  
   }
   async refundPayment(paymentId: string,refundDto: RefundDto,user: UserData) {
@@ -79,7 +79,7 @@ export class PaymentsService {
       })
   }
   async webhook(signature: string,payload: any){
-      let event= await this.stripeService.constructWebhook(payload,signature)
+      let event= this.stripeService.constructWebhook(payload,signature)
       switch(event.type) {
         case 'checkout.session.completed':{
           const session= event.data.object

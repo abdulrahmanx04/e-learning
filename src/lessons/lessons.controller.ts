@@ -1,23 +1,23 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, UploadedFiles, UseInterceptors, Put, HttpCode } from '@nestjs/common';
 import { LessonsService } from './lessons.service';
 import { CreateLessonDto, UpdateLessonDto } from './dto/lesson.dto';
-import { JwtAuthGuard } from 'src/common/guards/jwt-authguard';
-import { Roles } from 'src/common/decorators/admin-decorator';
+import { JwtAuthGuard } from 'src/common/guards/AuthGuard';
+import { Roles } from 'src/common/decorators/role.decorator';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
-import { RolesGuard } from 'src/common/guards/roles-guard';
+import { RolesGuard } from '../common/guards/roles.guard';
 import { Paginate } from 'nestjs-paginate';
 import type { PaginateQuery } from 'nestjs-paginate';
 import type { UserData } from 'src/common/all-interfaces/all-interfaces';
 import { CurrentUser } from 'src/common/decorators/current-user';
+import { ActiveEnrollment } from 'src/common/guards/active-enrollment.guard';
 
 @Controller('courses/:courseId/lessons')
 @UseGuards(JwtAuthGuard)
 export class LessonsController {
   constructor(private readonly lessonsService: LessonsService) {}
-
  
   @UseGuards(RolesGuard)
-  @Roles('admin','teacher')
+  @Roles('admin','instructor')
   @UseInterceptors(FileFieldsInterceptor([
     {name: 'videos', maxCount: 10},
     {name: 'materials', maxCount: 10}
@@ -31,12 +31,14 @@ export class LessonsController {
   }
 
   
+  @UseGuards(ActiveEnrollment)
   @Get('')
   findAll(@Param('courseId') courseId: string,
   @Paginate() query: PaginateQuery) {
     return this.lessonsService.findAll(courseId,query);
   }
 
+  @UseGuards(ActiveEnrollment)
   @Get('/:id')
   findOne(@Param('courseId') courseId: string,
   @Param('id') id: string) {
@@ -44,7 +46,7 @@ export class LessonsController {
   }
 
   @UseGuards(RolesGuard)
-  @Roles('admin','teacher')
+  @Roles('admin','instructor')
   @UseInterceptors(FileFieldsInterceptor([
     {name: 'videos', maxCount: 10},
     {name: 'materials', maxCount: 10},
@@ -61,7 +63,7 @@ export class LessonsController {
   } 
 
   @UseGuards(RolesGuard)
-  @Roles('teacher','admin')
+  @Roles('instructor','admin')
   @Delete(':id')
   @HttpCode(204)
   remove(@Param('courseId') courseId: string ,@Param('id') id: string,

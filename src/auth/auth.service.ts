@@ -17,17 +17,6 @@ export class AuthService {
         @InjectRepository(Users) private userRepo: Repository<Users>
     ) {}
 
-    private generateToken({id, role,email}: Record<string,string>): string {
-        return  this.jwtService.sign({id,role,email})
-    }
-
-    private generateEmailVerification() {
-        const token = crypto.randomBytes(32).toString('hex') as string
-        const hashedToken= crypto.createHash('sha256').update(token).digest('hex') as string
-        const url= `${process.env.FRONTEND_URL}/auth/verify-email/${token}` as string
-        return {token,hashedToken,url}
-    }
-
    
     async register(dto: RegisterDto): Promise<{message: string}> {
         const existingUser= await this.userRepo.findOne({
@@ -37,16 +26,8 @@ export class AuthService {
         })
 
         const{token,hashedToken,url}= this.generateEmailVerification()
-       
 
-        const newUser= this.userRepo.create({
-          name: dto.name,
-          email: dto.email,
-          password: dto.password,
-          role: Role.STUDENT,
-          verificationToken: hashedToken,
-          verificationTokenExpiry: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-        })
+        const newUser= this.registerUser(dto,hashedToken)
 
         await  Promise.all([
           this.userRepo.save(newUser),
@@ -177,4 +158,26 @@ export class AuthService {
 
         return
     }
+
+     private generateToken({id, role,email}: Record<string,string>): string {
+        return  this.jwtService.sign({id,role,email})
+    }
+
+    private generateEmailVerification() {
+        const token = crypto.randomBytes(32).toString('hex') as string
+        const hashedToken= crypto.createHash('sha256').update(token).digest('hex') as string
+        const url= `${process.env.FRONTEND_URL}/auth/verify-email/${token}` as string
+        return {token,hashedToken,url}
+    }
+
+   private registerUser(dto: RegisterDto,hashedToken: string) {
+        return this.userRepo.create({
+            name: dto.name,
+            email: dto.email,
+            password: dto.password,
+            role: Role.STUDENT,
+            verificationToken: hashedToken,
+            verificationTokenExpiry: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        })
+   }
 }

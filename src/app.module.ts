@@ -15,6 +15,8 @@ import { StripeModule } from './stripe/stripe.module';
 import { PaymentsModule } from './payments/payments.module';
 import { ConfigModule } from '@nestjs/config';
 import { Payment } from './payments/entities/payment.entity';
+import { ProgressModule } from './progress/progress.module';
+import { LessonProgress } from './progress/entities/progress.entity';
 dotenv.config()
 @Module({
   imports: [
@@ -26,7 +28,7 @@ dotenv.config()
       username: process.env.DB_USER,
       password: process.env.DB_PASS,
       database: process.env.DB_DATABASE,
-      entities: [Users,Courses,Enrollments,Lessons,Payment],
+      entities: [Users,Courses,Enrollments,Lessons,Payment,LessonProgress],
       synchronize: true
     }),
     UsersModule,
@@ -36,7 +38,8 @@ dotenv.config()
     CloudinaryModule,
     LessonsModule,
     PaymentsModule,
-    StripeModule
+    StripeModule,
+    ProgressModule,
   ],
   controllers: [],
   providers: [],

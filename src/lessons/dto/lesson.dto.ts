@@ -137,6 +137,7 @@ export class LessonResponseDto {
     @Expose()
     isPublished: boolean;
 
+    
     @Expose()
     @Type(() => FileDto)
     videos: FileDto[]
@@ -144,13 +145,14 @@ export class LessonResponseDto {
     @Expose()
     @Type(() => FileDto)
     materials: FileDto[]
+    
 }
 
 
 export class LessonRolesResponseDto extends LessonResponseDto {
     @Expose()
     courseId: string;
-
+   
     @Expose()
     createdAt: Date;
 

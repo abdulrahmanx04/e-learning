@@ -40,13 +40,8 @@ export class Enrollments {
     @Column({type: 'enum', enum: EnrollStatus, default: EnrollStatus.PENDING})
     status: EnrollStatus
 
-    @Column({type: 'int', default: 0})
-    @Min(0)
-    @Max(100    )
-    progressPercentage: number
 
-    @Column({type: 'int', default: 0})
-    lessonsCompleted: number
+    
 
     @Column({type: 'timestamp',nullable: true})
     completedAt: Date 

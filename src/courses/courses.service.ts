@@ -73,11 +73,10 @@ export class CoursesService {
         id,
         isPublished: false
       },
-      relations: ['teacher']
+      relations: ['instructor']
     }) 
 
     return plainToInstance(CourseResponseDto,course,{excludeExtraneousValues: true})
-   
   }
 
   

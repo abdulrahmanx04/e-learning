@@ -59,7 +59,8 @@ export class LessonsService {
     return {
       ...lessons,
       data: dataDto
-    };
+    }
+    
   }
 
   async findOne(courseId: string,lessonId: string): Promise<LessonResponseDto> {
@@ -81,7 +82,7 @@ export class LessonsService {
     })
 
     if(lesson.course.userId !== user.id && user.role !== 'admin') {
-      throw new ForbiddenException('You cannot edit lessons for other teachers')
+      throw new ForbiddenException('You cannot edit lessons for other instructors')
     }
     const [videos,materials]= await Promise.all([
       uploadFiles(this.cloudinaryService,'videos',files?.videos),

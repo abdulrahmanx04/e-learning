@@ -1,5 +1,6 @@
 import { Courses } from "src/courses/entities/course.entity";
-import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { LessonProgress } from "src/progress/entities/progress.entity";
+import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 
 export enum LessonType {
@@ -69,6 +70,9 @@ export class Lessons {
     @Column()
     courseId: string
 
+    @OneToMany(() => LessonProgress, progress => progress.lesson)
+    lessonProgress: LessonProgress[]
+    
     @CreateDateColumn()
     createdAt: Date
 

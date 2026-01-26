@@ -2,7 +2,7 @@ import { Controller, Get, Put,Post,Delete, UseGuards,Body, UseInterceptors, Uplo
 import { UsersService } from './users.service';
 import type { UserData } from 'src/common/all-interfaces/all-interfaces';
 import { CurrentUser } from '../common/decorators/current-user';
-import { JwtAuthGuard } from '../common/guards/jwt-authguard';
+import { JwtAuthGuard } from '../common/guards/AuthGuard';
 import { UpdateProfileDto } from './dto/profile-dto';
 import { PasswordDto } from 'src/auth/dto/auth-dto';
 import { FileInterceptor } from '@nestjs/platform-express';

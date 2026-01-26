@@ -3,7 +3,7 @@ import { PaymentsService } from './payments.service';
 import { CreatePaymentDto, RefundDto } from './dto/create-payment.dto';
 import  { CurrentUser } from 'src/common/decorators/current-user';
 import type { UserData } from 'src/common/all-interfaces/all-interfaces';
-import { JwtAuthGuard } from 'src/common/guards/jwt-authguard';
+import { JwtAuthGuard } from 'src/common/guards/AuthGuard';
 import { Paginate } from 'nestjs-paginate';
 import type { PaginateQuery } from 'nestjs-paginate';
 
@@ -41,7 +41,6 @@ export class PaymentsController {
   }
 
   @UseGuards(JwtAuthGuard)  
-
   @Get(':id')
   findOne(@Param('id') id: string, @CurrentUser() user: UserData) {
     return this.paymentsService.findOne(id,user);

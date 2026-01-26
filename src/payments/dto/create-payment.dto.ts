@@ -8,11 +8,10 @@ export class CreatePaymentDto {
 }
 
 export class RefundDto {
-    
     @IsNotEmpty()
     @IsNumber()
     amount: number
-    
+
     @IsOptional()
     @IsString()
     reason?: string

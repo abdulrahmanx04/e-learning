@@ -67,9 +67,9 @@ export class StripeService {
         }
     }
 
-    async constructWebhook(payload: Buffer,signature: string) {
+    constructWebhook(payload: Buffer,signature: string) {
        try {
-        return await this.stripe.webhooks.constructEvent(
+        return this.stripe.webhooks.constructEvent(
             payload,
             signature,
             this.webhookSecret

@@ -1,10 +1,10 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {  Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Enrollments, EnrollStatus } from './entities/enrollment.entity';
 import { Repository } from 'typeorm';
 import { Courses } from 'src/courses/entities/course.entity';
 import { UserData } from 'src/common/all-interfaces/all-interfaces';
-import { FilterOperator, paginate, Paginate, PaginateQuery } from 'nestjs-paginate';
+import { FilterOperator, paginate,  PaginateQuery } from 'nestjs-paginate';
 import { plainToInstance } from 'class-transformer';
 import { EnrollResponseDto } from './dto/enrollment.dto';
 
@@ -29,7 +29,7 @@ export class EnrollmentService {
   
   async findAll( query: PaginateQuery, user: UserData): Promise<{data: EnrollResponseDto[], meta: any}> {
     const enrolls= await paginate(query,this.enrollRepo,{
-      sortableColumns: ['createdAt','updatedAt','status','progressPercentage'],
+      sortableColumns: ['createdAt','updatedAt','status'],
       searchableColumns: ['course.title','status'],
       filterableColumns: {
         status: [FilterOperator.IN],

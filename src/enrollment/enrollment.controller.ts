@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
 import { EnrollmentService } from './enrollment.service';
-import { JwtAuthGuard } from 'src/common/guards/jwt-authguard';
+import { JwtAuthGuard } from 'src/common/guards/AuthGuard';
 import { CurrentUser } from 'src/common/decorators/current-user';
 import type { UserData } from 'src/common/all-interfaces/all-interfaces';
 import { Paginate} from 'nestjs-paginate';

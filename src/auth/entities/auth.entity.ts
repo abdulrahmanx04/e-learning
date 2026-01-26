@@ -7,7 +7,7 @@ import { Payment } from "src/payments/entities/payment.entity";
 
 export enum Role {
     STUDENT= 'student',
-    TEACHER= 'teacher',
+    INSTRUCTOR= 'instructor',
     ADMIN= 'admin'
 }
 @Entity('users')
@@ -28,7 +28,7 @@ export class Users {
         this.password= await bcrypt.hash(this.password, 10)
     }
 
-    @Column({type: 'enum',enum: Role,default: Role.STUDENT})
+    @Column({type: 'enum',enum: Role,default: Role.INSTRUCTOR})
     role: Role
 
 
