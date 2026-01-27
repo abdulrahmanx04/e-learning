@@ -32,7 +32,7 @@ dotenv.config()
       password: process.env.DB_PASS,
       database: process.env.DB_DATABASE,
       entities: [Users,Courses,Enrollments,Lessons,Payment,LessonProgress],
-      synchronize: true
+      synchronize: false
     }),
     ThrottlerModule.forRoot([{
       ttl: 60000,
