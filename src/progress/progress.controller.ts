@@ -7,9 +7,11 @@ import type { UserData } from 'src/common/all-interfaces/all-interfaces';
 import { JwtAuthGuard } from 'src/common/guards/AuthGuard';
 import { ActiveEnrollment } from 'src/common/guards/active-enrollment.guard';
 import { Paginate, type PaginateQuery } from 'nestjs-paginate';
+import { Throttle } from '@nestjs/throttler';
 
 @UseGuards(JwtAuthGuard,ActiveEnrollment)
 @Controller('courses/:courseId/lessons/:lessonId/progress')
+@Throttle({ default: { limit: 30, ttl: 60000 } })
 export class ProgressController {
   constructor(private readonly progressService: ProgressService) {}
 

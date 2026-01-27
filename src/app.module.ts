@@ -18,6 +18,8 @@ import { Payment } from './payments/entities/payment.entity';
 import { ProgressModule } from './progress/progress.module';
 import { LessonProgress } from './progress/entities/progress.entity';
 import { AdminModule } from './admin/admin.module';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 dotenv.config()
 @Module({
   imports: [
@@ -32,6 +34,10 @@ dotenv.config()
       entities: [Users,Courses,Enrollments,Lessons,Payment,LessonProgress],
       synchronize: true
     }),
+    ThrottlerModule.forRoot([{
+      ttl: 60000,
+      limit: 100
+    }]),
     UsersModule,
     AuthModule,
     CoursesModule,
@@ -44,6 +50,9 @@ dotenv.config()
     AdminModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [{
+    provide: APP_GUARD,
+    useClass: ThrottlerGuard
+  }],
 })
 export class AppModule {}

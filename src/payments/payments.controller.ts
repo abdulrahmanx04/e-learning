@@ -6,8 +6,10 @@ import type { UserData } from 'src/common/all-interfaces/all-interfaces';
 import { JwtAuthGuard } from 'src/common/guards/AuthGuard';
 import { Paginate } from 'nestjs-paginate';
 import type { PaginateQuery } from 'nestjs-paginate';
+import { Throttle } from '@nestjs/throttler';
 
 @Controller('payments')
+@Throttle({ default: { limit: 20, ttl: 60000 } })
 
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}

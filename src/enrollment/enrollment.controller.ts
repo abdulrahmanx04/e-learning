@@ -5,10 +5,12 @@ import { CurrentUser } from 'src/common/decorators/current-user';
 import type { UserData } from 'src/common/all-interfaces/all-interfaces';
 import { Paginate} from 'nestjs-paginate';
 import type { PaginateQuery } from 'nestjs-paginate';
+import { Throttle } from '@nestjs/throttler';
 
 
 @Controller('enrollments')
 @UseGuards(JwtAuthGuard)
+@Throttle({ default: { limit: 50, ttl: 60000 } })
 export class  EnrollmentController {
   constructor(private readonly enrollmentService: EnrollmentService) {}
   @Get('me')

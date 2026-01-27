@@ -6,8 +6,10 @@ import { JwtAuthGuard } from '../common/guards/AuthGuard';
 import { UpdateProfileDto } from './dto/profile-dto';
 import { PasswordDto } from 'src/auth/dto/auth-dto';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { Throttle } from '@nestjs/throttler';
 
 @Controller('users')
+@Throttle({ default: { limit: 30, ttl: 60000 } })
 export class UserController {
   constructor(private readonly usersService: UsersService) {}
 

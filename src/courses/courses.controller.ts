@@ -10,7 +10,10 @@ import { RolesGuard } from 'src/common/guards/roles.guard';
 import { Roles } from 'src/common/decorators/role.decorator';
 import { CurrentUser } from 'src/common/decorators/current-user';
 import type { UserData } from 'src/common/all-interfaces/all-interfaces';
+import { Throttle } from '@nestjs/throttler';
+
 @Controller('courses')
+@Throttle({ default: { limit: 50, ttl: 60000 } })
 export class CoursesController {
   constructor(private readonly coursesService: CoursesService) {}
 

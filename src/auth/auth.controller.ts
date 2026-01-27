@@ -4,12 +4,15 @@ import { loginDto, RegisterDto, EmailDto, ResetPasswordDto, ChangePasswordDto } 
 import { CurrentUser } from 'src/common/decorators/current-user';
 import type { UserData } from 'src/common/all-interfaces/all-interfaces';
 import { JwtAuthGuard } from 'src/common/guards/AuthGuard';
+import { Throttle } from '@nestjs/throttler';
 
 @Controller('auth')
+@Throttle({ default: { limit: 10, ttl: 60000 } })
 
 export class AuthController {
     constructor(private readonly authService: AuthService) {}
     
+    @Throttle({ default: { limit: 3, ttl: 60000 } })
     @Post('/register')
     register(@Body() dto: RegisterDto ) {
        return this.authService.register(dto)
@@ -25,16 +28,19 @@ export class AuthController {
         return this.authService.resendVerification(dto)
     }
     
+    @Throttle({ default: { limit: 5, ttl: 60000 } })
     @Post('/login')
     login(@Body() dto: loginDto) {
         return this.authService.login(dto)
     }
 
+    @Throttle({ default: { limit: 3, ttl: 60000 } })
     @Post('/forgot-password')
     forgotPassword(@Body() dto: EmailDto) {
         return this.authService.forgotPassword(dto)
     }
 
+    @Throttle({ default: { limit: 3, ttl: 60000 } })
     @Post('/reset-password/:token')
     resetPassword(@Param('token') token: string ,@Body() dto: ResetPasswordDto) {
         return this.authService.resetPassword(token,dto)

@@ -10,9 +10,11 @@ import type { PaginateQuery } from 'nestjs-paginate';
 import type { UserData } from 'src/common/all-interfaces/all-interfaces';
 import { CurrentUser } from 'src/common/decorators/current-user';
 import { ActiveEnrollment } from 'src/common/guards/active-enrollment.guard';
+import { Throttle } from '@nestjs/throttler';
 
 @Controller('courses/:courseId/lessons')
 @UseGuards(JwtAuthGuard)
+@Throttle({ default: { limit: 40, ttl: 60000 } })
 export class LessonsController {
   constructor(private readonly lessonsService: LessonsService) {}
  
