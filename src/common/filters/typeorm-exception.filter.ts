@@ -12,8 +12,8 @@ export class TypeOrmExceptionFilter implements ExceptionFilter {
             error: 'DuplicateEntry'
         },
         '23503': {
-            status: HttpStatus.BAD_REQUEST,
-            message: 'Resource does not exist',
+            status: HttpStatus.NOT_FOUND,
+            message: 'Referenced resource not found',
             error: 'ForeignKeyViolation'
         },
         '23502': {
