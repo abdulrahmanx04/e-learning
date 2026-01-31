@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, Post, Put, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { loginDto, RegisterDto, EmailDto, ResetPasswordDto, ChangePasswordDto } from './dto/auth-dto';
+import { LoginDto, CreateAuthDto, EmailDto, ResetPasswordDto, ChangePasswordDto } from './dto/auth-dto';
 import { CurrentUser } from 'src/common/decorators/current-user';
 import type { UserData } from 'src/common/all-interfaces/all-interfaces';
 import { JwtAuthGuard } from 'src/common/guards/AuthGuard';
@@ -14,8 +14,8 @@ export class AuthController {
     
     @Throttle({ default: { limit: 3, ttl: 60000 } })
     @Post('/register')
-    register(@Body() dto: RegisterDto ) {
-       return this.authService.register(dto)
+    register(@Body() dto: CreateAuthDto ) {
+       return this.authService.create(dto)
     }
     
     @Get('/verify-email/:token')
@@ -30,7 +30,7 @@ export class AuthController {
     
     @Throttle({ default: { limit: 5, ttl: 60000 } })
     @Post('/login')
-    login(@Body() dto: loginDto) {
+    login(@Body() dto: LoginDto) {
         return this.authService.login(dto)
     }
 

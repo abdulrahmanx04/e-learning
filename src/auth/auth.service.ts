@@ -1,197 +1,168 @@
-import { BadRequestException, Injectable, NotFoundException,UnauthorizedException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { loginDto, RegisterDto, EmailDto, ResetPasswordDto, ChangePasswordDto } from './dto/auth-dto';
+import { BadRequestException, ForbiddenException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { ChangePasswordDto, CreateAuthDto, EmailDto, LoginDto,  PasswordDto } from './dto/auth-dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Users, Role } from './entities/auth.entity';
+import { MoreThan, Repository } from 'typeorm';
 import crypto from 'crypto'
 import bcrypt from 'bcrypt'
-import { sendEmail } from 'src/common/utils/email';
-import { UserData } from '../common/all-interfaces/all-interfaces';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Users } from './entities/auth.entity';
-import {  Repository, MoreThan, LessThan } from 'typeorm';
-import {Role} from './entities/auth.entity'
-
+import { emailType, sendEmail } from 'src/common/utils/email';
+import { JwtService } from '@nestjs/jwt';
+import {  UserData  } from '../common/all-interfaces/all-interfaces';
 @Injectable()
 export class AuthService {
-    constructor(
-        private readonly jwtService: JwtService,
-        @InjectRepository(Users) private userRepo: Repository<Users>
-    ) {}
+  constructor(
+    private jwtService: JwtService,
+    @InjectRepository(Users) private userRepo: Repository<Users>) {}
 
+  async create(dto: CreateAuthDto) {
+    await this.userRegistered(dto.email)
+    
+    const {hashedToken,url}= this. generateVerificationData('verify-email')
+
+    const user= this.registerUser(dto,hashedToken)
    
-    async register(dto: RegisterDto): Promise<{message: string}> {
-        const existingUser= await this.userRepo.findOne({
-          where: {
-            email: dto.email
-          }
-        })
+    await this.userRepo.save(user)
+    await this.sendEmailVerification('verification',user.email,url)
+   
+    return {message: 'Email created successfully, please verify your email'}
+  }
 
-        const{token,hashedToken,url}= this.generateEmailVerification()
+  async verifyEmail(token: string) {
+      const  hashedToken= crypto.createHash('sha256').update(token).digest('hex')
+      const userExists= await this.userRepo.findOneOrFail({where: {
+        verificationToken: hashedToken,
+        verificationExpiry: MoreThan(new Date())
+      }})
 
-        const newUser= this.registerUser(dto,hashedToken)
+      userExists.isActive= true
+      userExists.verificationToken= null
+      userExists.verificationExpiry= null
 
-        await  Promise.all([
-          this.userRepo.save(newUser),
-           sendEmail('verification',newUser.email,url)
-        ])
+      await this.userRepo.save(userExists);
 
-        return {
-          message: 'User created successfully, please verify your email to login'
-        }
-    }
+      return { message: 'Email verified successfully' }
 
-    async verifyEmail(verificationToken: string): Promise<{token: string}> {
-        const hashedToken= crypto.createHash('sha256').update(verificationToken).digest('hex')
-        const userExists= await this.userRepo.findOneOrFail({
-            where: {
-                verificationToken: hashedToken,
-                verificationTokenExpiry: MoreThan(new Date())
-            }
-        })
+  }
 
-        if (userExists.pendingEmail) {
-            await this.verifyNewEmail(userExists)
-        }
+  async resendVerification(dto: EmailDto) {
+    const user= await this.userRepo.findOneOrFail({where: {email: dto.email,isActive: false}})
+    const {hashedToken,url}= this.generateVerificationData('verify-email')
 
-        userExists.isActive= true
-        userExists.verificationToken=null
-        userExists.verificationTokenExpiry=null
-        const token= this.generateToken({id: userExists.id,role: userExists.role,email: userExists.email})
+    user.verificationToken=hashedToken
+    user.verificationExpiry=new Date(Date.now() + 7 * 24 * 60 * 60 *1000)
 
-        await this.userRepo.save(userExists)
+    await this.userRepo.save(user)
+    await this.sendEmailVerification('verification',user.email,url)
+    return { message: 'Email verification sent successfully' }
+  }
 
-        return {
-            token
-        }
-    }
+  async login(dto : LoginDto) {
+    const user= await this.userRegistered(dto.email)
 
-    async resendVerification(dto: EmailDto): Promise<{message: string}> {
-        const userExists= await this.userRepo.findOneOrFail({
-            where: {
-               email: dto.email,
-               isActive: false
-            }
-        })
+    const validatedUser = await this.checkUserData(user,dto)
+    const token= this.generateToken(validatedUser)
+    return {token}
+  }
 
-        const{token,hashedToken,url}= this.generateEmailVerification()
+  async changePassword(dto: ChangePasswordDto, userData:  UserData ) {
+    const user= await this.userRepo.findOneOrFail({where: {id: userData.id}})
+    await this.changePass(user,dto)
+    return 
+  }
 
-        userExists.verificationToken=hashedToken
-        userExists.verificationTokenExpiry= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+  async forgotPassword(dto: EmailDto) {
+    const user= await this.userRegistered(dto.email)
+    if(!user) return { message: 'If the email exists, a reset password link has been sent.' }
 
-        await  Promise.all([
-          this.userRepo.save(userExists),
-           sendEmail('verification',userExists.email,url)
-        ])
-        return {
-            message: 'Email resent successfully'
-        }
-    }
-
-    async login(dto: loginDto): Promise<{token: string}> {
-        const userExists= await this.userRepo.findOneOrFail({where: {email: dto.email}})
-
-        // if(!exists.isActive) {
-        //     throw new BadRequestException('Email verification required')
-        // }
-        const isValid= await bcrypt.compare(dto.password,userExists.password)
-
-        if(!isValid) {
-            throw new BadRequestException('Invalid credentials')
-        }
-
-        const token= this.generateToken({id: userExists.id,role: userExists.role,email:userExists.email})
-        return {
-            token
-        }
-    }
-
-    async forgotPassword(dto: EmailDto): Promise<{message: string}> {
-        const user= await this.userRepo.findOneOrFail({where: {email: dto.email}})
-
-       const{token,hashedToken,url}= this.generateEmailVerification()
-
-        user.resetPasswordToken=hashedToken
-        user.resetPasswordExpiry=new Date(Date.now() + 15 * 60 * 1000)
-
-        await this.userRepo.save(user)
+    const {url,hashedToken} = this.generateVerificationData('reset-password')
+    user.resetPasswordToken= hashedToken
+    user.resetPasswordExpiry= new Date(Date.now() +15 * 60 * 1000)
 
 
-       await sendEmail('resetPassword',user.email,url)
-        return {
-            message: 'If the email exists, a reset password link has been sent.'
-        }
-    }
+    await this.userRepo.save(user)
+    await this.sendEmailVerification('reset',user.email,url)
+    return { message: 'If the email exists, a reset password link has been sent.' }
 
-    async resetPassword(token: string,dto: ResetPasswordDto): Promise<{token: string}> {
-        const hashToken= crypto.createHash('sha256').update(token).digest('hex')
-        const user= await this.userRepo.findOneOrFail({
-            where: {
-                resetPasswordToken: hashToken,
-                resetPasswordExpiry: MoreThan(new Date())
-            }
-        })
+  }
 
-        user.password= dto.password
-        user.resetPasswordToken= null
-        user.resetPasswordExpiry= null
+  async resetPassword(token: string, dto:  PasswordDto) {
+      const  hashedToken= crypto.createHash('sha256').update(token).digest('hex')
+      const userExists= await this.userRepo.findOneOrFail({where: {
+        resetPasswordToken: hashedToken,
+        resetPasswordExpiry: MoreThan(new Date())
+      }})
 
-        await this.userRepo.save(user)
+      userExists.resetPasswordToken= null
+      userExists.resetPasswordExpiry= null
+      userExists.password= dto.password
 
-        const newToken= this.generateToken({id: user.id, role: user.role})
-        return {
-            token: newToken
-        }
-    }
+      await this.userRepo.save(userExists);
 
-    async changePassword(dto: ChangePasswordDto, userData: UserData) {
+      return { message: 'Password reset successfully, please login with your new password' }
+  }
+ 
 
-        const user= await this.userRepo.findOneBy({id: userData.id})
-        if(!user) {
-            throw new BadRequestException('User not found')
-        }
-        if(dto.currentPassword === dto.newPassword) {
-            throw new BadRequestException('Current and new password cannot be the same')
-        }
-        const isValid= await bcrypt.compare(dto.currentPassword,user.password)
-        if(!isValid) {
+
+  private async changePass(user: Users, dto: ChangePasswordDto) {
+     const comparePass= await bcrypt.compare(dto.currentPassword,user.password)
+
+      if(!comparePass) {
             throw new BadRequestException('Current password is incorrect')
-        }
+      }
+      if(dto.currentPassword === dto.newPassword) {
+        throw new BadRequestException('Current password and new password cannot be the same')
+      }
+      const hashedPassword= await bcrypt.hash(dto.newPassword,10)
+      user.password= hashedPassword
+      await this.userRepo.save(user)
+      return 
+  }
+  private generateVerificationData(type: string) {
+      const token= crypto.randomBytes(32).toString('hex')
+      const hashedToken= crypto.createHash('sha256').update(token).digest('hex')
+      const url= `${process.env.FRONTEND_URL}/auth/${type}/${token}`
+      return {token,hashedToken,url}
+  }
+  private registerUser(dto: CreateAuthDto, hashedToken: string) {
+    return this.userRepo.create({
+      ...dto,
+      verificationToken: hashedToken,
+      verificationExpiry: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      role: Role.ADMIN,
+    })
+  }
+  private generateToken(user: Users) {
+      const token= this.jwtService.sign({
+        sub: user.id,
+        email: user.email,
+        role: user.role
+      })
+      return token
+  }
 
-        user.password= dto.newPassword
-
-        await this.userRepo.save(user)
-
-        return
+  private async sendEmailVerification(type: emailType,to: string,url: string) {
+    try {
+    await sendEmail(type,to,url)
+    }catch(err){
+      throw new InternalServerErrorException('Sending email verification failed')
     }
+  }
 
-     private generateToken({id, role,email}: Record<string,string>): string {
-        return  this.jwtService.sign({id,role,email})
+  private async userRegistered(email: string) {
+    const user= await this.userRepo.findOne({where: {email}})
+    return user
+  }
+
+  private async checkUserData(user: Users | null , dto: LoginDto) {
+    if(!user) {
+      throw new BadRequestException('Email or password are incorrect');
     }
+    const isPasswordValid = await bcrypt.compare(dto.password, user.password);
+    if (!isPasswordValid) throw new BadRequestException('Email or password are incorrect');
 
-    private generateEmailVerification() {
-        const token = crypto.randomBytes(32).toString('hex') as string
-        const hashedToken= crypto.createHash('sha256').update(token).digest('hex') as string
-        const url= `${process.env.FRONTEND_URL}/auth/verify-email/${token}` as string
-        return {token,hashedToken,url}
+    if(!user.isActive) {
+      throw new ForbiddenException('Please verify your email first');
     }
-
-   private registerUser(dto: RegisterDto,hashedToken: string) {
-        return this.userRepo.create({
-            name: dto.name,
-            email: dto.email,
-            password: dto.password,
-            role: Role.STUDENT,
-            verificationToken: hashedToken,
-            verificationTokenExpiry: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-        })
-   }
-   private async verifyNewEmail(userExists: Users) {
-        if(userExists.pendingEmail) {
-            const taken= await this.userRepo.findOneBy({email : userExists.pendingEmail})
-            if(taken && taken.id !== userExists.id) {
-                throw new BadRequestException('Email already used')
-            }
-            userExists.email= userExists.pendingEmail
-            userExists.pendingEmail= null
-     }
-   }
+    return user
+  }
 }

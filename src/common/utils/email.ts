@@ -49,7 +49,7 @@ const templates= {
 }
 
 
-type emailType= 'verification' | 'resetPassword'  | 'paymentSuccess' | 'paymentFailed' | 'paymentRefunded'
+export type emailType= 'verification' | 'reset'  | 'paymentSuccess' | 'paymentFailed' | 'paymentRefunded'
 
 export async function sendEmail(type: emailType, to: string,url?: any) {
     const template= templates[type] (url)

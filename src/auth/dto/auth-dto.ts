@@ -2,7 +2,7 @@
 import { IsEmail, IsNotEmpty, IsOptional, IsString, Length, Max, MaxLength, Min, MinLength } from "class-validator";
 
 
-export class RegisterDto {
+export class CreateAuthDto {
 
     @IsNotEmpty()
     @IsEmail()
@@ -35,7 +35,7 @@ export class EmailDto {
 }
 
 
-export class loginDto {
+export class LoginDto {
     @IsNotEmpty()
     @IsEmail()
     email: string

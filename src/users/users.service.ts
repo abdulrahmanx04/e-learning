@@ -84,7 +84,7 @@ export class UsersService {
         const hashedToken= crypto.createHash('sha256').update(token).digest('hex')
         const url= `${process.env.FRONTEND_URL}/auth/verify-email/${token}`
         user.verificationToken=hashedToken
-        user.verificationTokenExpiry= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        user.verificationExpiry= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
         user.pendingEmail= dto.email
         await sendEmail('verification',dto.email,url)
     }

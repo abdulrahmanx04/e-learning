@@ -63,7 +63,7 @@ export class Users {
     verificationToken: string | null
 
     @Column({type: 'timestamp', nullable: true})
-    verificationTokenExpiry: Date | null
+    verificationExpiry: Date | null
     
     @CreateDateColumn()
     createdAt: Date
