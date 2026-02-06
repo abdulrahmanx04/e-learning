@@ -22,11 +22,16 @@ export default function CoursesPage() {
     try {
       setLoading(true)
       setError("")
-      const response= await api.get('/courses')
+      const token= localStorage.getItem('token')
+        const response= await api.get('/courses', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        })
       setCourses(response.data.data)
     }catch(err: any) {
       const data= err?.response?.data
-      if(err?.response.status === 401) {
+      if(err?.response?.status == 401) {
         localStorage.removeItem('token')
         router.replace('/login')
       }  
